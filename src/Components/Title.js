@@ -8,7 +8,7 @@ export default function Title(props) {
       component="h2"
       variant="h6"
       gutterBottom
-      style={{ color: "#FCB022" }}
+      style={{ color: "#FCB022", display: "inline" }}
     >
       {props.children}
     </Typography>

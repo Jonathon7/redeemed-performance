@@ -5,9 +5,10 @@ import AppBar from "@material-ui/core/AppBar";
 import Box from "@material-ui/core/Box";
 import Grid from "@material-ui/core/Grid";
 import Link from "@material-ui/core/Link";
-import MenuIcon from "@material-ui/icons/Menu";
 import IconButton from "@material-ui/core/IconButton";
 import Badge from "@material-ui/core/Badge";
+import MenuIcon from "@material-ui/icons/Menu";
+import FavoriteIcon from "@material-ui/icons/Favorite";
 import ShoppingCartOutlinedIcon from "@material-ui/icons/ShoppingCart";
 import AccountCircleOutlinedIcon from "@material-ui/icons/AccountCircle";
 
@@ -56,11 +57,11 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 const links = [
-  { title: "link", url: "#" },
-  { title: "link", url: "#" },
-  { title: "link", url: "#" },
-  { title: "link", url: "#" },
-  { title: "link", url: "#" },
+  { title: "About", url: "/about" },
+  { title: "Link", url: "#" },
+  { title: "Link", url: "#" },
+  { title: "Link", url: "#" },
+  { title: "Link", url: "#" },
 ];
 
 export default function Navbar() {
@@ -114,7 +115,9 @@ export default function Navbar() {
               );
             })}
           </Box>
-
+          <IconButton href="/favorite" className={classes.iconButton}>
+            <FavoriteIcon style={{ color: "#fff" }} />
+          </IconButton>
           <IconButton href="/user" className={classes.iconButton}>
             <AccountCircleOutlinedIcon style={{ color: "#fff" }} />
           </IconButton>

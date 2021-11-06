@@ -12,7 +12,7 @@ import Divider from "@material-ui/core/Divider";
 import UserInfo from "./UserInfo";
 import Deposits from "./Deposits";
 import OrderHistory from "./OrderHistory";
-import Orders from "./Orders";
+import YourVehicles from "./YourVehicles";
 
 function Copyright() {
   return (
@@ -83,7 +83,6 @@ const useStyles = makeStyles((theme) => ({
 
 export default function UserProfile() {
   const classes = useStyles();
-
   const fixedHeightPaper = clsx(classes.paper, classes.fixedHeight);
 
   return (
@@ -103,7 +102,7 @@ export default function UserProfile() {
                 <Deposits bubbaBucks={41} />
               </Paper>
             </Grid>
-            {/* User Info */}
+            {/* Order History */}
             <Grid item xs={12} md={8} lg={8}>
               <Paper className={fixedHeightPaper}>
                 <OrderHistory />
@@ -112,7 +111,7 @@ export default function UserProfile() {
             {/* Recent Orders */}
             <Grid item xs={12}>
               <Paper className={classes.paper}>
-                <Orders />
+                <YourVehicles />
               </Paper>
             </Grid>
           </Grid>

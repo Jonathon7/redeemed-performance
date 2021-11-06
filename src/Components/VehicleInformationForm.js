@@ -13,6 +13,9 @@ import Container from "@material-ui/core/Container";
 
 const useStyles = makeStyles((theme) => ({
   container: {
+    background: "#fff",
+    paddingBottom: theme.spacing(4),
+    borderRadius: 5,
     textAlign: "left",
   },
   formControl: {
@@ -63,7 +66,7 @@ const getModelData = async (make) => {
   return modelData;
 };
 
-export default function VehicleInformationForm() {
+export default function VehicleInformationForm(props) {
   const classes = useStyles();
   const [VIN, setVIN] = useState("");
   const [year, setYear] = useState("");
@@ -285,22 +288,24 @@ export default function VehicleInformationForm() {
             </Select>
           </FormControl>
 
-          <FormControl className={classes.formControl}>
-            <InputLabel>Part</InputLabel>
-            <Select
-              value={part}
-              onChange={(event) => handleChange(event, "part")}
-              disabled={!partsData.length}
-            >
-              {partsData.map((elem, i) => {
-                return (
-                  <MenuItem key={i} value={elem}>
-                    {elem}
-                  </MenuItem>
-                );
-              })}
-            </Select>
-          </FormControl>
+          {props.partFinder && (
+            <FormControl className={classes.formControl}>
+              <InputLabel>Part</InputLabel>
+              <Select
+                value={part}
+                onChange={(event) => handleChange(event, "part")}
+                disabled={!partsData.length}
+              >
+                {partsData.map((elem, i) => {
+                  return (
+                    <MenuItem key={i} value={elem}>
+                      {elem}
+                    </MenuItem>
+                  );
+                })}
+              </Select>
+            </FormControl>
+          )}
         </Grid>
       </Container>
     </React.Fragment>
