@@ -24,75 +24,91 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 const yearRange = [];
-const subModelData = ["val1", "val2", "val3", "val4", "val5"];
-const engineData = ["engine1", "engine2"];
 
 for (let i = 2021; i >= 1930; i--) {
   yearRange.push(i);
 }
 
-const getMakeData = async () => {
+const getMakeData = async (year) => {
   const makeData = [];
-  const makes = await axios
-    .get("https://vpic.nhtsa.dot.gov/api/vehicles/GetAllMakes?format=json")
-    .catch((err) => {
-      console.log(err);
-    });
+  const makes = await axios.get(`/api/makes/${year}`).catch((err) => {
+    console.log(err);
+  });
 
-  if (!makes) return;
+  if (!makes.data.length) return [];
 
-  for (let i = 0; i < 100; i++) {
-    makeData.push(makes.data.Results[i].Make_Name);
+  for (let i = 0; i < makes.data.length; i++) {
+    makeData.push(makes.data[i].model_make_id);
   }
 
   return makeData;
 };
 
-const getModelData = async (make) => {
+const getModelData = async (year, make) => {
   const modelData = [];
-  const models = await axios
-    .get(
-      `https://vpic.nhtsa.dot.gov/api/vehicles/GetModelsForMake/${make}?format=json`
-    )
-    .catch((err) => {
-      console.log(err);
-      return;
-    });
+  const models = await axios.get(`/api/models/${year}/${make}`).catch((err) => {
+    console.log(err);
+    return;
+  });
 
-  for (let i = 0; i < models.data.Results.length; i++) {
-    modelData.push(models.data.Results[i].Model_Name);
+  for (let i = 0; i < models.data.length; i++) {
+    modelData.push(models.data[i].model_name);
   }
 
   return modelData;
 };
 
+const getSubmodelData = async (year, make, model) => {
+  const submodelData = [];
+  const submodels = await axios
+    .get(`/api/submodels/${year}/${make}/${model}`)
+    .catch((err) => {
+      console.log(err);
+      return;
+    });
+
+  for (let i = 0; i < submodels.data.length; i++) {
+    submodelData.push(submodels.data[i].model_trim);
+  }
+
+  return submodelData;
+};
+
+const getEngineData = async (submodel) => {
+  const engineData = [];
+  const engines = await axios.get(`/api/engines/${submodel}`).catch((err) => {
+    console.log(err);
+    return;
+  });
+
+  for (let i = 0; i < engines.data.length; i++) {
+    engineData.push(engines.data[i].model_engine_cc);
+  }
+
+  return engineData;
+};
+
 export default function VehicleInformationForm(props) {
   const classes = useStyles();
   const [VIN, setVIN] = useState("");
+  const [trim, setTrim] = useState("");
   const [year, setYear] = useState("");
   const [makeData, setMakeData] = useState([]);
   const [make, setMake] = useState("");
-  const [model, setModel] = useState("");
-  const [trim, setTrim] = useState("");
   const [modelData, setModelData] = useState([]);
-  const [subModel, setSubModel] = useState("");
+  const [model, setModel] = useState("");
+  const [submodelData, setSubmodelData] = useState([]);
+  const [submodel, setSubmodel] = useState("");
+  const [engineData, setEngineData] = useState([]);
   const [engine, setEngine] = useState("");
   const [partsData, setPartsData] = useState([]);
   const [part, setPart] = useState("");
 
   useEffect(() => {
-    getMakeData().then((res) => {
-      setMakeData(res);
-    });
-
-    if (make) {
-      getModelData(make).then((res) => setModelData(res));
-    }
-
-    if (year && make && model && subModel && engine) {
+    if (year && make && model && submodel && engine) {
       getParts();
     }
-  }, [year, make, model, subModel, engine]);
+  }, [year, make, model, submodel, engine]);
 
   const handleChange = (event, type) => {
     if (type === "VIN") {
@@ -102,18 +118,60 @@ export default function VehicleInformationForm(props) {
 
     if (type === "year") {
       setYear(event.target.value);
+      if (makeData) {
+        setMake("");
+        setModel("");
+        setSubmodel("");
+        setEngine("");
+        setMakeData([]);
+        setModelData([]);
+        setSubmodelData([]);
+        setEngineData([]);
+      }
+      event.target.value &&
+        getMakeData(event.target.value).then((makes) => setMakeData(makes));
     }
 
     if (type === "make") {
       setMake(event.target.value);
+      if (modelData) {
+        setModel("");
+        setSubmodel("");
+        setEngine("");
+        setModelData([]);
+        setSubmodelData([]);
+        setEngineData([]);
+      }
+      event.target.value &&
+        getModelData(year, event.target.value).then((models) =>
+          setModelData(models)
+        );
     }
 
     if (type === "model") {
       setModel(event.target.value);
+      if (submodelData) {
+        setSubmodel("");
+        setEngine("");
+        setSubmodelData([]);
+        setEngineData([]);
+      }
+      event.target.value &&
+        getSubmodelData(year, make, event.target.value).then((submodels) =>
+          setSubmodelData(submodels)
+        );
     }
 
     if (type === "sub model") {
-      setSubModel(event.target.value);
+      setSubmodel(event.target.value);
+      if (engineData) {
+        setEngine("");
+        setEngineData([]);
+      }
+      event.target.value &&
+        getEngineData(event.target.value).then((engines) =>
+          setEngineData(engines)
+        );
     }
 
     if (type === "engine") {
@@ -134,7 +192,6 @@ export default function VehicleInformationForm(props) {
       )
       .then((res) => {
         for (let i = 0; i < res.data.Results.length; i++) {
-          console.log(res.data.Results[i]);
           if (res.data.Results[i].Variable === "Model Year")
             if (!isNaN(res.data.Results[i].Value))
               setYear(res.data.Results[i].Value);
@@ -150,15 +207,15 @@ export default function VehicleInformationForm(props) {
 
           if (res.data.Results[i].Variable === "Trim")
             if (res.data.Results[i].Value) {
-              subModelData.push(res.data.Results[i].Value);
+              submodelData.push(res.data.Results[i].Value);
               setTrim(res.data.Results[i].Value);
-              setSubModel(res.data.Results[i].Value);
+              setSubmodel(res.data.Results[i].Value);
             }
 
           if (res.data.Results[i].Variable === "Series")
             if (res.data.Results[i].Value && trim === "") {
-              subModelData.push(res.data.Results[i].Value);
-              setSubModel(res.data.Results[i].Value);
+              submodelData.push(res.data.Results[i].Value);
+              setSubmodel(res.data.Results[i].Value);
             }
 
           if (res.data.Results[i].Variable === "Displacement (L)")
@@ -222,6 +279,7 @@ export default function VehicleInformationForm(props) {
           <FormControl className={classes.formControl}>
             <InputLabel>Make</InputLabel>
             <Select
+              disabled={!year}
               value={make}
               onChange={(event) => handleChange(event, "make")}
               defaultValue="Select a Make"
@@ -240,6 +298,7 @@ export default function VehicleInformationForm(props) {
           <FormControl className={classes.formControl}>
             <InputLabel>Model</InputLabel>
             <Select
+              disabled={!makeData.length}
               value={model}
               onChange={(event) => handleChange(event, "model")}
               defaultValue="Select a Model"
@@ -255,13 +314,14 @@ export default function VehicleInformationForm(props) {
           </FormControl>
 
           <FormControl className={classes.formControl}>
-            <InputLabel>Sub Model</InputLabel>
+            <InputLabel>Submodel</InputLabel>
             <Select
-              value={subModel}
+              disabled={!modelData.length}
+              value={submodel}
               onChange={(event) => handleChange(event, "sub model")}
               defaultValue="Select a Sub Model"
             >
-              {subModelData.map((elem, i) => {
+              {submodelData.map((elem, i) => {
                 return (
                   <MenuItem key={i} value={elem}>
                     {elem}
@@ -274,6 +334,7 @@ export default function VehicleInformationForm(props) {
           <FormControl className={classes.formControl}>
             <InputLabel>Engine</InputLabel>
             <Select
+              disabled={!submodelData.length}
               value={engine}
               onChange={(event) => handleChange(event, "engine")}
               defaultValue="Select an Engine"

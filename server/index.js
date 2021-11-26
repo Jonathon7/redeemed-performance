@@ -2,19 +2,19 @@ require("dotenv").config();
 const path = require("path");
 const express = require("express");
 const session = require("express-session");
-const mysql = require("mysql2");
 const MySQLStore = require("express-mysql-session")(session);
 const app = express();
+const partFinder = require("./controllers/partFinder");
 
 const options = {
-  host: process.env.HOST,
+  socketPath: process.env.SOCKET_PATH,
   user: process.env.USER,
   password: process.env.PASS,
   database: process.env.DATABASE,
+  waitForConnections: true,
+  connectionLimit: 10,
+  queueLimit: 0,
 };
-
-const connection = mysql.createConnection(options);
-connection.connect((err) => console.log(err));
 
 const sessionStore = new MySQLStore(options);
 
@@ -29,17 +29,10 @@ app.use(
 
 app.use(express.static(`${__dirname}/../build`));
 
-app.get("/api/makes", (req, res) => {
-  connection.query(
-    "SELECT * FROM CarQueryAPI WHERE model_make_id = 'toyota';",
-    function (error, results, fields) {
-      if (error) throw error;
-
-      console.log(results);
-      res.status(200).json(results);
-    }
-  );
-});
+app.get("/api/makes/:year", partFinder.getMakesByYear);
+app.get("/api/models/:year/:make", partFinder.getModelsByMake);
+app.get("/api/submodels/:year/:make/:model", partFinder.getSubmodelsByModel);
+app.get("/api/engines/:submodel", partFinder.getEnginesBySubmodel);
 
 app.get("*", (req, res) => {
   res.sendFile(path.join(__dirname, "../build/index.html"));
